@@ -1,0 +1,3336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OI教练模拟器 - 专业版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 25px 40px;
+            text-align: center;
+            border-bottom: 5px solid #3498db;
+        }
+        
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            color: #f8f9fa;
+        }
+        
+        header h2 {
+            font-size: 1.4rem;
+            font-weight: normal;
+            color: #dfe6e9;
+        }
+        
+        .game-phase {
+            display: none;
+        }
+        
+        .game-phase.active {
+            display: block;
+        }
+        
+        /* 初始化界面样式 */
+        .init-container {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .init-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #3498db;
+        }
+        
+        .province-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        @media (max-width: 1200px) {
+            .province-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .province-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        .province-option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            color: #2c3e50;
+            position: relative;
+        }
+        
+        .province-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: #3498db;
+        }
+        
+        .province-option.selected {
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(to right, #2980b9, #1c5a87);
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(to right, #95a5a6, #7f8c8d);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(to right, #7f8c8d, #636e72);
+            transform: translateY(-3px);
+        }
+        
+        .btn-success {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(to right, #27ae60, #219653);
+            transform: translateY(-3px);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(to right, #f39c12, #e67e22);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: linear-gradient(to right, #e67e22, #d35400);
+            transform: translateY(-3px);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(to right, #c0392b, #a93226);
+            transform: translateY(-3px);
+        }
+        
+        /* 主游戏界面样式 */
+        .main-game-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 140px);
+        }
+        
+        .game-header {
+            background: #f8f9fa;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .game-stats {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .game-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .main-panel {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .student-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .student-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .student-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+        
+        .student-card.selected {
+            background: rgba(52, 152, 219, 0.3);
+            border-color: #3498db;
+        }
+        
+        .student-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: white;
+        }
+        
+        .student-level {
+            font-size: 0.9rem;
+            color: #dfe6e9;
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .action-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: #3498db;
+        }
+        
+        .action-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #3498db;
+        }
+        
+        .action-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .action-desc {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        /* 学生详情样式 */
+        .student-detail {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+        
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .student-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+        
+        .student-details h3 {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .skill-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 992px) {
+            .skill-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .skill-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .skill-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+        
+        .skill-level {
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .skill-progress {
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .skill-progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #3498db, #2ecc71);
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+        
+        .skill-exp {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        /* 题目选择样式 */
+        .problem-list {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .problem-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 15px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #2c3e50;
+        }
+        
+        .filter-btn.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .problem-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .problem-card:hover {
+            border-color: #3498db;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .problem-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .problem-title {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+        
+        .problem-difficulty {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .difficulty-easy {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+        
+        .difficulty-medium {
+            background: #fff4d5;
+            color: #f39c12;
+        }
+        
+        .difficulty-hard {
+            background: #ffeaea;
+            color: #e74c3c;
+        }
+        
+        .problem-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .skill-tag {
+            background: #e0f0ff;
+            color: #3498db;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        
+        /* 比赛界面样式 */
+        .competition-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .competition-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #3498db;
+        }
+        
+        .competition-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .competition-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .competition-status {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .status-upcoming {
+            background: #fff4d5;
+            color: #f39c12;
+        }
+        
+        .status-ongoing {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+        
+        .status-finished {
+            background: #f0f0f0;
+            color: #7f8c8d;
+        }
+        
+        .competition-info {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 15px;
+            color: #7f8c8d;
+        }
+        
+        .competition-participants {
+            margin-top: 15px;
+        }
+        
+        .participant-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .participant-tag {
+            background: #f0f0f0;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .modal-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: #e74c3c;
+        }
+        
+        .modal-body {
+            margin-bottom: 25px;
+        }
+        
+        /* 等级颜色 */
+        .level-e { color: #7f8c8d; }
+        .level-d { color: #3498db; }
+        .level-c { color: #2ecc71; }
+        .level-b { color: #f39c12; }
+        .level-a { color: #e74c3c; }
+        .level-s { color: #9b59b6; }
+        .level-ss { color: #e74c3c; font-weight: bold; }
+        .level-sss { color: #f1c40f; font-weight: bold; text-shadow: 0 0 5px rgba(241, 196, 15, 0.5); }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .action-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .game-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 250px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .game-stats {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            
+            .stat-item {
+                width: calc(50% - 15px);
+            }
+        }
+        
+        /* 日志样式 */
+        .log-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .log-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+        }
+        
+        .log-item:last-child {
+            border-bottom: none;
+        }
+        
+        .log-time {
+            color: #7f8c8d;
+            margin-right: 10px;
+        }
+        
+        .log-content {
+            color: #2c3e50;
+        }
+        
+        /* 比赛结果样式 */
+        .result-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .result-card {
+            flex: 1;
+            min-width: 200px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .result-rank {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        
+        .result-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .result-score {
+            font-size: 1.5rem;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        /* 错误提示 */
+        .error-message {
+            background: #ffeaea;
+            border: 2px solid #e74c3c;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #c0392b;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        /* 比赛详情样式 - 新增 */
+        .competition-detail {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .competition-problems {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .problem-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .problem-id {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+        
+        .problem-score {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .ranking-table th {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: bold;
+            color: #2c3e50;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .ranking-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .ranking-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .rank-1 { background-color: rgba(255, 215, 0, 0.1); }
+        .rank-2 { background-color: rgba(192, 192, 192, 0.1); }
+        .rank-3 { background-color: rgba(205, 127, 50, 0.1); }
+        
+        .score-cell {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        
+        .qualified {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .not-qualified {
+            color: #e74c3c;
+        }
+        
+        .qualification-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .qualified-status {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+        
+        .not-qualified-status {
+            background: #ffeaea;
+            color: #e74c3c;
+        }
+        
+        .competition-progress {
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #3498db, #2ecc71);
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+        
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        /* 批量训练样式 */
+        .batch-training {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .student-checkboxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .student-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* 字体图标 */
+        @font-face {
+            font-family: 'Font Awesome 6 Free';
+            font-style: normal;
+            font-weight: 900;
+            src: url("data:font/woff2;charset=utf-8;base64,d09GMgABAAAAAA...") format("woff2");
+        }
+        
+        .fas {
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+        }
+        
+        .fa-robot:before { content: "\f544"; }
+        .fa-map-marked-alt:before { content: "\f5a0"; }
+        .fa-users:before { content: "\f0c0"; }
+        .fa-gamepad:before { content: "\f11b"; }
+        .fa-play:before { content: "\f04b"; }
+        .fa-folder-open:before { content: "\f07c"; }
+        .fa-calendar-alt:before { content: "\f073"; }
+        .fa-forward:before { content: "\f04e"; }
+        .fa-save:before { content: "\f0c7"; }
+        .fa-user-graduate:before { content: "\f501"; }
+        .fa-chart-line:before { content: "\f201"; }
+        .fa-scroll:before { content: "\f70e"; }
+        .fa-tasks:before { content: "\f0ae"; }
+        .fa-code:before { content: "\f121"; }
+        .fa-campground:before { content: "\f6bb"; }
+        .fa-trophy:before { content: "\f091"; }
+        .fa-bed:before { content: "\f236"; }
+        .fa-chart-bar:before { content: "\f080"; }
+        .fa-chart-pie:before { content: "\f200"; }
+        .fa-user:before { content: "\f007"; }
+        .fa-map-marker-alt:before { content: "\f3c5"; }
+        .fa-times:before { content: "\f00d"; }
+        .fa-user-check:before { content: "\f4fc"; }
+        .fa-calendar:before { content: "\f133"; }
+        .fa-signal:before { content: "\f012"; }
+        .fa-coins:before { content: "\f51e"; }
+        .fa-sign-in-alt:before { content: "\f2f6"; }
+        .fa-medal:before { content: "\f5a2"; }
+        .fa-check:before { content: "\f00c"; }
+        .fa-flag-checkered:before { content: "\f11e"; }
+        .fa-redo:before { content: "\f01e"; }
+        .fa-info-circle:before { content: "\f05a"; }
+        .fa-crown:before { content: "\f521"; }
+        .fa-check-circle:before { content: "\f058"; }
+        .fa-times-circle:before { content: "\f057"; }
+        .fa-clock:before { content: "\f017"; }
+        .fa-list-ol:before { content: "\f0cb"; }
+        .fa-star:before { content: "\f005"; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 初始化界面 -->
+        <div id="initPhase" class="game-phase active">
+            <header>
+                <h1><i class="fas fa-robot"></i> OI 教练模拟器</h1>
+                <h2>成为顶级信息学奥赛教练，带领学生站上IOI领奖台</h2>
+            </header>
+            
+            <div class="init-container">
+                <div id="errorMessage" class="error-message"></div>
+                
+                <div class="init-section">
+                    <h2 class="section-title"><i class="fas fa-map-marked-alt"></i> 选择省份</h2>
+                    <p style="margin-bottom: 20px; color: #7f8c8d;">选择你的执教省份 - 不同省份有不同的难度级别、经费支持和学生天赋</p>
+                    <div class="province-grid" id="provinceGrid">
+                        <!-- 省份选项将通过JS动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="init-section">
+                    <h2 class="section-title"><i class="fas fa-users"></i> 学生配置</h2>
+                    <div class="input-group">
+                        <label for="studentCount">学生数量 (3-10人):</label>
+                        <input type="number" id="studentCount" min="3" max="10" value="5">
+                    </div>
+                    <div class="input-group">
+                        <label for="initialBudget">初始经费 (万元):</label>
+                        <select id="initialBudget">
+                            <option value="30">30万 (困难模式)</option>
+                            <option value="50" selected>50万 (普通模式)</option>
+                            <option value="80">80万 (简单模式)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="init-section">
+                    <h2 class="section-title"><i class="fas fa-gamepad"></i> 游戏设置</h2>
+                    <div class="input-group">
+                        <label for="gameDuration">游戏时长 (竞赛年):</label>
+                        <select id="gameDuration">
+                            <option value="2" selected>2年 (完整赛季)</option>
+                            <option value="4">4年 (长期规划)</option>
+                            <option value="1">1年 (快速体验)</option>
+                        </select>
+                    </div>
+                    <div style="margin-top: 20px; background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                        <p style="color: #1565c0; font-weight: bold;"><i class="fas fa-info-circle"></i> 游戏提示:</p>
+                        <p style="margin-top: 10px; color: #2c3e50;">每个竞赛年包含52周。你将通过每周的训练、比赛和休息来提升学生技能。终极目标是带领学生晋级IOI并获得好成绩！</p>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button id="startGameBtn" class="btn btn-primary">
+                        <i class="fas fa-play"></i> 开始游戏
+                    </button>
+                    <button id="loadGameBtn" class="btn btn-secondary">
+                        <i class="fas fa-folder-open"></i> 读取存档
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主游戏界面 -->
+        <div id="mainGamePhase" class="game-phase">
+            <div class="game-header">
+                <div>
+                    <h2 style="color: #2c3e50; font-size: 1.5rem;">
+                        <span id="currentProvince">浙江省</span> OI 训练中心
+                    </h2>
+                    <p style="color: #7f8c8d; font-size: 0.9rem;">
+                        <i class="fas fa-calendar-alt"></i> 第 <span id="currentWeek">1</span> 周 • 
+                        <span id="currentYear">2023-2024</span> 竞赛年
+                    </p>
+                </div>
+                
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">剩余经费</div>
+                        <div class="stat-value">¥<span id="budgetValue">500000</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">团队平均等级</div>
+                        <div class="stat-value" id="avgLevel">D</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">下一场比赛</div>
+                        <div class="stat-value" id="nextCompetition">CSP-S1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">当前阶段</div>
+                        <div class="stat-value" id="currentPhase">赛季初期</div>
+                    </div>
+                </div>
+                
+                <div>
+                    <button id="endWeekBtn" class="btn btn-success">
+                        <i class="fas fa-forward"></i> 结束本周
+                    </button>
+                    <button id="saveGameBtn" class="btn btn-secondary" style="margin-left: 10px;">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                </div>
+            </div>
+            
+            <div class="game-content">
+                <div class="sidebar">
+                    <h3 style="color: white; margin-bottom: 20px; font-size: 1.3rem;">
+                        <i class="fas fa-user-graduate"></i> 学生列表
+                    </h3>
+                    <div class="student-list" id="studentList">
+                        <!-- 学生列表将通过JS动态生成 -->
+                    </div>
+                    
+                    <div style="margin-top: 30px;">
+                        <h4 style="color: white; margin-bottom: 15px; font-size: 1.1rem;">
+                            <i class="fas fa-chart-line"></i> 团队状态
+                        </h4>
+                        <div style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span style="color: #dfe6e9;">整体士气:</span>
+                                <span style="color: #2ecc71; font-weight: bold;">良好</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span style="color: #dfe6e9;">训练强度:</span>
+                                <span style="color: #f39c12; font-weight: bold;">中等</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #dfe6e9;">疲劳程度:</span>
+                                <span style="color: #3498db; font-weight: bold;">较低</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 30px;">
+                        <button id="showLogBtn" class="btn btn-secondary" style="width: 100%;">
+                            <i class="fas fa-scroll"></i> 查看日志
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="main-panel">
+                    <div style="margin-bottom: 30px;">
+                        <h2 style="color: #2c3e50; font-size: 1.8rem; margin-bottom: 15px;">
+                            <i class="fas fa-tasks"></i> 本周安排
+                        </h2>
+                        <p style="color: #7f8c8d;">为你的学生选择本周的训练计划或活动</p>
+                    </div>
+                    
+                    <div class="action-grid" id="actionGrid">
+                        <!-- 行动选项将通过JS动态生成 -->
+                    </div>
+                    
+                    <div id="studentDetailSection">
+                        <!-- 学生详情将通过JS动态生成 -->
+                    </div>
+                    
+                    <div class="log-container" id="gameLog" style="display: none;">
+                        <h4 style="color: #2c3e50; margin-bottom: 15px;">
+                            <i class="fas fa-scroll"></i> 游戏日志
+                        </h4>
+                        <div id="logContent">
+                            <!-- 日志内容将通过JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 题目选择弹窗 - 改进为批量训练 -->
+    <div id="problemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-code"></i> 选择训练题目</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="batch-training">
+                    <h4 style="color: #2c3e50; margin-bottom: 15px;">选择学生进行批量训练</h4>
+                    <div class="student-checkboxes" id="batchStudentSelect">
+                        <!-- 批量训练学生选择将通过JS动态生成 -->
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button id="selectAllBtn" class="btn btn-secondary" style="padding: 8px 15px; font-size: 0.9rem;">
+                            全选
+                        </button>
+                        <button id="deselectAllBtn" class="btn btn-secondary" style="padding: 8px 15px; font-size: 0.9rem; margin-left: 10px;">
+                            取消全选
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="problem-filters">
+                    <button class="filter-btn active" data-filter="all">全部</button>
+                    <button class="filter-btn" data-filter="dp">动态规划</button>
+                    <button class="filter-btn" data-filter="graph">图论</button>
+                    <button class="filter-btn" data-filter="ds">数据结构</button>
+                    <button class="filter-btn" data-filter="string">字符串</button>
+                    <button class="filter-btn" data-filter="math">数学</button>
+                </div>
+                <div class="problem-grid" id="problemGrid">
+                    <!-- 题目列表将通过JS动态生成 -->
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="assignBatchProblemBtn" class="btn btn-primary" disabled>
+                    <i class="fas fa-user-check"></i> 分配给选中学生
+                </button>
+                <button class="btn btn-secondary close-modal" style="margin-left: 15px;">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 集训选择弹窗 -->
+    <div id="trainingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-campground"></i> 选择训练营</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>选择参加学生 (可多选):</label>
+                    <div id="trainingStudentSelect" style="margin-top: 10px;">
+                        <!-- 学生选择框将通过JS动态生成 -->
+                    </div>
+                </div>
+                
+                <div style="margin-top: 25px;">
+                    <h4 style="color: #2c3e50; margin-bottom: 15px;">可用训练营</h4>
+                    <div class="problem-grid" id="trainingGrid">
+                        <!-- 集训营列表将通过JS动态生成 -->
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="startTrainingBtn" class="btn btn-primary" disabled>
+                    <i class="fas fa-play"></i> 开始训练营
+                </button>
+                <button class="btn btn-secondary close-modal" style="margin-left: 15px;">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 比赛详情弹窗 - 改进 -->
+    <div id="competitionDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-trophy"></i> 比赛详情</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="competitionDetail">
+                    <!-- 比赛详情将通过JS动态生成 -->
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-primary close-modal">
+                    <i class="fas fa-check"></i> 关闭
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 比赛进行中弹窗 -->
+    <div id="competitionLiveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-clock"></i> <span id="liveCompetitionName">CSP-S1</span> - 进行中</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="competitionLive">
+                    <!-- 比赛实时信息将通过JS动态生成 -->
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <div class="competition-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="competitionProgress"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span>已进行: <span id="elapsedTime">0</span> 分钟</span>
+                        <span>剩余: <span id="remainingTime">180</span> 分钟</span>
+                        <span>总计: 180 分钟</span>
+                    </div>
+                </div>
+                <button id="nextMinuteBtn" class="btn btn-warning" style="margin-top: 15px;">
+                    <i class="fas fa-forward"></i> 模拟10分钟
+                </button>
+                <button id="skipToEndBtn" class="btn btn-danger" style="margin-left: 10px; margin-top: 15px;">
+                    <i class="fas fa-flag-checkered"></i> 跳到结束
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 比赛结果弹窗 -->
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-medal"></i> 比赛结果</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="competitionResult">
+                    <!-- 比赛结果将通过JS动态生成 -->
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-primary close-modal">
+                    <i class="fas fa-check"></i> 确认
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 游戏结束弹窗 -->
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-flag-checkered"></i> 游戏结束</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; padding: 20px;">
+                    <h2 id="gameResultTitle" style="color: #2c3e50; margin-bottom: 20px;"></h2>
+                    <div id="gameResultStats" style="margin-bottom: 30px;">
+                        <!-- 游戏统计将通过JS动态生成 -->
+                    </div>
+                    <div class="result-container" id="finalResults">
+                        <!-- 最终结果将通过JS动态生成 -->
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="restartGameBtn" class="btn btn-primary">
+                    <i class="fas fa-redo"></i> 重新开始
+                </button>
+                <button class="btn btn-secondary close-modal" style="margin-left: 15px;">
+                    <i class="fas fa-times"></i> 关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏全局变量
+        const Game = {
+            // 游戏状态
+            currentPhase: 'init',
+            currentWeek: 1,
+            currentYear: 1,
+            totalYears: 2,
+            selectedProvince: null,
+            budget: 500000,
+            initialBudget: 500000,
+            students: [],
+            selectedStudentId: null,
+            selectedProblem: null,
+            selectedTraining: null,
+            selectedStudentsForTraining: [],
+            batchSelectedStudents: [],
+            logs: [],
+            competitions: [],
+            upcomingCompetition: null,
+            gameDuration: 2,
+            
+            // 当前进行的比赛
+            activeCompetition: null,
+            competitionTimer: null,
+            competitionElapsedTime: 0,
+            competitionTotalTime: 180, // 3小时比赛
+            
+            // 省份数据
+            provinces: [
+                {id: 'zhejiang', name: '浙江省', difficulty: 'hard', budgetMultiplier: 1.2, talentMultiplier: 1.3},
+                {id: 'beijing', name: '北京市', difficulty: 'hard', budgetMultiplier: 1.5, talentMultiplier: 1.5},
+                {id: 'shanghai', name: '上海市', difficulty: 'hard', budgetMultiplier: 1.4, talentMultiplier: 1.4},
+                {id: 'jiangsu', name: '江苏省', difficulty: 'medium', budgetMultiplier: 1.1, talentMultiplier: 1.2},
+                {id: 'guangdong', name: '广东省', difficulty: 'medium', budgetMultiplier: 1.0, talentMultiplier: 1.1},
+                {id: 'sichuan', name: '四川省', difficulty: 'medium', budgetMultiplier: 0.9, talentMultiplier: 1.0},
+                {id: 'hunan', name: '湖南省', difficulty: 'easy', budgetMultiplier: 0.8, talentMultiplier: 0.9},
+                {id: 'hubei', name: '湖北省', difficulty: 'easy', budgetMultiplier: 0.8, talentMultiplier: 0.9},
+                {id: 'fujian', name: '福建省', difficulty: 'easy', budgetMultiplier: 0.7, talentMultiplier: 0.8},
+                {id: 'anhui', name: '安徽省', difficulty: 'easy', budgetMultiplier: 0.6, talentMultiplier: 0.7},
+                {id: 'hebei', name: '河北省', difficulty: 'easy', budgetMultiplier: 0.6, talentMultiplier: 0.7},
+                {id: 'henan', name: '河南省', difficulty: 'easy', budgetMultiplier: 0.5, talentMultiplier: 0.6},
+            ],
+            
+            // 技能类型
+            skillTypes: [
+                {id: 'dp', name: '动态规划', color: '#3498db'},
+                {id: 'graph', name: '图论', color: '#2ecc71'},
+                {id: 'ds', name: '数据结构', color: '#e74c3c'},
+                {id: 'string', name: '字符串', color: '#9b59b6'},
+                {id: 'math', name: '数学', color: '#f39c12'},
+                {id: 'coding', name: '编程能力', color: '#1abc9c'},
+                {id: 'thinking', name: '思维能力', color: '#34495e'}
+            ],
+            
+            // 等级系统
+            levels: [
+                {id: 'e', name: 'E', minExp: 0, maxExp: 100},
+                {id: 'd', name: 'D', minExp: 100, maxExp: 300},
+                {id: 'c', name: 'C', minExp: 300, maxExp: 600},
+                {id: 'b', name: 'B', minExp: 600, maxExp: 1000},
+                {id: 'a', name: 'A', minExp: 1000, maxExp: 1500},
+                {id: 's', name: 'S', minExp: 1500, maxExp: 2200},
+                {id: 'ss', name: 'SS', minExp: 2200, maxExp: 3000},
+                {id: 'sss', name: 'SSS', minExp: 3000, maxExp: 4000}
+            ],
+            
+            // 题目数据
+            problems: [
+                {id: 1, name: '01背包问题', difficulty: 'easy', skills: ['dp'], exp: 15, cost: 0},
+                {id: 2, name: '完全背包问题', difficulty: 'medium', skills: ['dp'], exp: 25, cost: 0},
+                {id: 3, name: '最长公共子序列', difficulty: 'medium', skills: ['dp'], exp: 30, cost: 0},
+                {id: 4, name: '最短路径问题', difficulty: 'medium', skills: ['graph'], exp: 25, cost: 0},
+                {id: 5, name: '最小生成树', difficulty: 'medium', skills: ['graph'], exp: 28, cost: 0},
+                {id: 6, name: '拓扑排序', difficulty: 'medium', skills: ['graph'], exp: 22, cost: 0},
+                {id: 7, name: '线段树模板', difficulty: 'hard', skills: ['ds'], exp: 35, cost: 0},
+                {id: 8, name: '并查集应用', difficulty: 'medium', skills: ['ds'], exp: 25, cost: 0},
+                {id: 9, name: 'KMP字符串匹配', difficulty: 'hard', skills: ['string'], exp: 40, cost: 0},
+                {id: 10, name: 'Trie字典树', difficulty: 'medium', skills: ['string', 'ds'], exp: 30, cost: 0},
+                {id: 11, name: '快速幂', difficulty: 'easy', skills: ['math'], exp: 15, cost: 0},
+                {id: 12, name: '欧拉筛', difficulty: 'medium', skills: ['math'], exp: 25, cost: 0},
+                {id: 13, name: '组合数学', difficulty: 'hard', skills: ['math'], exp: 35, cost: 0},
+                {id: 14, name: '动态规划优化', difficulty: 'hard', skills: ['dp', 'thinking'], exp: 45, cost: 1000},
+                {id: 15, name: '网络流最大流', difficulty: 'hard', skills: ['graph', 'thinking'], exp: 50, cost: 1500}
+            ],
+            
+            // 集训营数据
+            trainings: [
+                {id: 1, name: '基础算法集训营', difficulty: 'easy', skills: ['dp', 'graph', 'ds'], exp: 50, cost: 5000, duration: 2},
+                {id: 2, name: '动态规划专题营', difficulty: 'medium', skills: ['dp'], exp: 80, cost: 8000, duration: 2},
+                {id: 3, name: '高级图论集训营', difficulty: 'hard', skills: ['graph'], exp: 120, cost: 12000, duration: 3},
+                {id: 4, name: '数据结构强化营', difficulty: 'medium', skills: ['ds'], exp: 90, cost: 10000, duration: 2},
+                {id: 5, name: '数学与数论营', difficulty: 'hard', skills: ['math'], exp: 110, cost: 11000, duration: 3},
+                {id: 6, name: '综合能力提升营', difficulty: 'hard', skills: ['dp', 'graph', 'ds', 'math'], exp: 150, cost: 20000, duration: 4},
+                {id: 7, name: '省选冲刺营', difficulty: 'hard', skills: ['dp', 'graph', 'ds', 'math', 'thinking'], exp: 200, cost: 30000, duration: 4},
+                {id: 8, name: 'NOI金牌营', difficulty: 'hard', skills: ['dp', 'graph', 'ds', 'math', 'thinking', 'coding'], exp: 300, cost: 50000, duration: 6}
+            ],
+            
+            // 完整的比赛系统数据
+            competitionSystem: [
+                {
+                    id: 'csp-s1',
+                    name: 'CSP-S第一轮',
+                    type: 'preliminary',
+                    week: 4,
+                    duration: 2, // 周数
+                    problems: 4,
+                    problemBaseScore: 100,
+                    qualificationRate: 0.7, // 70%晋级
+                    nextCompetition: 'csp-s2',
+                    cost: 1000
+                },
+                {
+                    id: 'csp-s2',
+                    name: 'CSP-S第二轮',
+                    type: 'provincial',
+                    week: 8,
+                    duration: 2,
+                    problems: 4,
+                    problemBaseScore: 100,
+                    qualificationRate: 0.5, // 50%晋级NOIP
+                    nextCompetition: 'noip',
+                    cost: 2000
+                },
+                {
+                    id: 'noip',
+                    name: 'NOIP',
+                    type: 'national',
+                    week: 12,
+                    duration: 2,
+                    problems: 4,
+                    problemBaseScore: 100,
+                    qualificationRate: 0.3, // 30%晋级省选
+                    nextCompetition: 'provincial-selection',
+                    cost: 3000
+                },
+                {
+                    id: 'provincial-selection',
+                    name: '省队选拔',
+                    type: 'selection',
+                    week: 20,
+                    duration: 3,
+                    problems: 6,
+                    problemBaseScore: 100,
+                    qualificationRate: 0.2, // 20%晋级NOI
+                    nextCompetition: 'noi',
+                    cost: 5000
+                },
+                {
+                    id: 'noi',
+                    name: 'NOI',
+                    type: 'national',
+                    week: 30,
+                    duration: 5,
+                    problems: 6,
+                    problemBaseScore: 100,
+                    qualificationRate: 0.1, // 10%晋级集训队
+                    nextCompetition: 'team-selection',
+                    cost: 10000
+                },
+                {
+                    id: 'team-selection',
+                    name: '国家队选拔',
+                    type: 'team',
+                    week: 40,
+                    duration: 4,
+                    problems: 8,
+                    problemBaseScore: 100,
+                    qualificationRate: 0.05, // 5%晋级IOI
+                    nextCompetition: 'ioi',
+                    cost: 15000
+                },
+                {
+                    id: 'ioi',
+                    name: 'IOI',
+                    type: 'international',
+                    week: 48,
+                    duration: 5,
+                    problems: 8,
+                    problemBaseScore: 100,
+                    qualificationRate: 0, // 最后比赛
+                    nextCompetition: null,
+                    cost: 30000
+                }
+            ]
+        };
+
+        // 学生类
+        class Student {
+            constructor(id, name, province) {
+                this.id = id;
+                this.name = name;
+                this.province = province;
+                this.skills = {};
+                this.fatigue = 0;
+                this.morale = 70;
+                this.trainingHistory = [];
+                this.competitionHistory = [];
+                this.qualifiedForNext = false; // 是否晋级下一轮
+                this.currentCompetition = null;
+                
+                // 初始化技能
+                Game.skillTypes.forEach(skill => {
+                    const baseExp = Math.floor(Math.random() * 30) + 20;
+                    const provinceMultiplier = Game.selectedProvince ? Game.selectedProvince.talentMultiplier : 1;
+                    this.skills[skill.id] = {
+                        id: skill.id,
+                        name: skill.name,
+                        exp: Math.floor(baseExp * provinceMultiplier),
+                        color: skill.color
+                    };
+                });
+            }
+            
+            getLevel(skillId) {
+                const skill = this.skills[skillId];
+                if (!skill) return 'e';
+                
+                for (let i = Game.levels.length - 1; i >= 0; i--) {
+                    if (skill.exp >= Game.levels[i].minExp) {
+                        return Game.levels[i].id;
+                    }
+                }
+                return 'e';
+            }
+            
+            getLevelName(skillId) {
+                const levelId = this.getLevel(skillId);
+                const level = Game.levels.find(l => l.id === levelId);
+                return level ? level.name : 'E';
+            }
+            
+            getSkillProgress(skillId) {
+                const skill = this.skills[skillId];
+                if (!skill) return 0;
+                
+                const levelId = this.getLevel(skillId);
+                const level = Game.levels.find(l => l.id === levelId);
+                const nextLevel = Game.levels.find(l => l.id === this.getNextLevelId(levelId));
+                
+                if (!level || !nextLevel) return 0;
+                
+                const currentLevelExp = skill.exp - level.minExp;
+                const levelRange = nextLevel.minExp - level.minExp;
+                return (currentLevelExp / levelRange) * 100;
+            }
+            
+            getNextLevelId(currentLevelId) {
+                const index = Game.levels.findIndex(l => l.id === currentLevelId);
+                if (index < Game.levels.length - 1) {
+                    return Game.levels[index + 1].id;
+                }
+                return currentLevelId;
+            }
+            
+            addSkillExp(skillId, exp) {
+                if (!this.skills[skillId]) return;
+                
+                const fatiguePenalty = 1 - (this.fatigue / 200);
+                const actualExp = Math.floor(exp * fatiguePenalty);
+                
+                this.skills[skillId].exp += actualExp;
+                this.fatigue += 10;
+                this.morale -= 5;
+                
+                this.fatigue = Math.min(100, Math.max(0, this.fatigue));
+                this.morale = Math.min(100, Math.max(0, this.morale));
+                
+                return actualExp;
+            }
+            
+            getAverageLevel() {
+                let totalExp = 0;
+                Object.values(this.skills).forEach(skill => {
+                    totalExp += skill.exp;
+                });
+                
+                const avgExp = totalExp / Object.keys(this.skills).length;
+                
+                for (let i = Game.levels.length - 1; i >= 0; i--) {
+                    if (avgExp >= Game.levels[i].minExp) {
+                        return Game.levels[i].id;
+                    }
+                }
+                return 'e';
+            }
+            
+            rest() {
+                this.fatigue = Math.max(0, this.fatigue - 30);
+                this.morale = Math.min(100, this.morale + 20);
+            }
+            
+            // 计算比赛基础得分
+            getCompetitionBaseScore() {
+                let totalSkill = 0;
+                Object.values(this.skills).forEach(skill => {
+                    totalSkill += skill.exp;
+                });
+                return totalSkill / Object.keys(this.skills).length;
+            }
+        }
+
+        // 比赛类
+        class Competition {
+            constructor(config) {
+                this.id = config.id;
+                this.name = config.name;
+                this.type = config.type;
+                this.scheduledWeek = config.week;
+                this.duration = config.duration;
+                this.problemCount = config.problems;
+                this.problemBaseScore = config.problemBaseScore;
+                this.qualificationRate = config.qualificationRate;
+                this.nextCompetition = config.nextCompetition;
+                this.cost = config.cost;
+                
+                this.status = 'upcoming'; // upcoming, ongoing, finished
+                this.currentWeek = 0; // 比赛进行中的周数
+                this.participants = [];
+                this.qualifiedParticipants = [];
+                this.problems = [];
+                this.results = null;
+                this.startedWeek = null;
+                
+                // 生成题目
+                this.generateProblems();
+            }
+            
+            generateProblems() {
+                this.problems = [];
+                const difficulties = ['easy', 'medium', 'hard'];
+                
+                for (let i = 0; i < this.problemCount; i++) {
+                    const difficulty = this.type === 'international' ? 'hard' : 
+                                     this.type === 'national' ? (i < 2 ? 'medium' : 'hard') :
+                                     i < this.problemCount/2 ? 'easy' : 'medium';
+                    
+                    this.problems.push({
+                        id: i + 1,
+                        name: `题目 ${String.fromCharCode(65 + i)}`,
+                        difficulty: difficulty,
+                        baseScore: this.problemBaseScore,
+                        maxScore: this.problemBaseScore * (difficulty === 'easy' ? 1 : difficulty === 'medium' ? 1.5 : 2),
+                        solved: false,
+                        score: 0,
+                        submissionTime: null
+                    });
+                }
+            }
+            
+            // 开始比赛
+            start(students) {
+                this.status = 'ongoing';
+                this.startedWeek = Game.currentWeek;
+                this.participants = students.filter(s => s.qualifiedForNext || !s.competitionHistory.length);
+                this.currentWeek = 1;
+                
+                // 为每个参与者初始化比赛数据
+                this.participants.forEach(student => {
+                    student.currentCompetition = {
+                        competitionId: this.id,
+                        problems: JSON.parse(JSON.stringify(this.problems)),
+                        totalScore: 0,
+                        rank: 0,
+                        qualified: false
+                    };
+                });
+                
+                // 扣除报名费
+                const totalCost = this.cost * this.participants.length;
+                Game.budget -= totalCost;
+                
+                addLog(`${this.name} 已开始！${this.participants.length} 名学生参加，花费：${formatMoney(totalCost)}`);
+            }
+            
+            // 模拟比赛进行
+            simulateProgress() {
+                if (this.status !== 'ongoing') return;
+                
+                this.currentWeek++;
+                
+                // 模拟学生解题
+                this.participants.forEach(student => {
+                    if (!student.currentCompetition) return;
+                    
+                    const competitionData = student.currentCompetition;
+                    const baseAbility = student.getCompetitionBaseScore();
+                    
+                    // 随机解题
+                    competitionData.problems.forEach(problem => {
+                        if (!problem.solved) {
+                            // 解题概率基于学生能力和题目难度
+                            let solveProbability = baseAbility / 100;
+                            if (problem.difficulty === 'medium') solveProbability *= 0.7;
+                            if (problem.difficulty === 'hard') solveProbability *= 0.4;
+                            
+                            // 增加随比赛进行解题概率提高
+                            solveProbability += (this.currentWeek / this.duration) * 0.3;
+                            
+                            if (Math.random() < solveProbability) {
+                                problem.solved = true;
+                                // 分数基于解题时间和题目难度
+                                const timeFactor = 1 - (this.currentWeek / this.duration) * 0.5;
+                                problem.score = Math.floor(problem.maxScore * timeFactor * (0.8 + Math.random() * 0.4));
+                                problem.submissionTime = this.currentWeek;
+                                
+                                // 增加相关技能经验
+                                const relevantSkills = this.getRelevantSkills();
+                                relevantSkills.forEach(skillId => {
+                                    student.addSkillExp(skillId, problem.score / 10);
+                                });
+                            }
+                        }
+                    });
+                    
+                    // 更新总分
+                    competitionData.totalScore = competitionData.problems.reduce((sum, p) => sum + p.score, 0);
+                });
+                
+                // 检查是否结束
+                if (this.currentWeek >= this.duration) {
+                    this.finish();
+                }
+            }
+            
+            // 获取相关技能
+            getRelevantSkills() {
+                switch(this.type) {
+                    case 'preliminary': return ['dp', 'graph', 'ds'];
+                    case 'provincial': return ['dp', 'graph', 'ds', 'math'];
+                    case 'national': return ['dp', 'graph', 'ds', 'math', 'thinking'];
+                    case 'selection': return ['dp', 'graph', 'ds', 'math', 'thinking', 'coding'];
+                    case 'team': return ['dp', 'graph', 'ds', 'math', 'thinking', 'coding'];
+                    case 'international': return ['dp', 'graph', 'ds', 'math', 'thinking', 'coding'];
+                    default: return ['dp', 'graph'];
+                }
+            }
+            
+            // 结束比赛
+            finish() {
+                this.status = 'finished';
+                
+                // 计算排名
+                const participantsWithScores = this.participants.map(student => ({
+                    student: student,
+                    score: student.currentCompetition.totalScore,
+                    problemCount: student.currentCompetition.problems.filter(p => p.solved).length
+                }));
+                
+                // 按分数排序
+                participantsWithScores.sort((a, b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    return b.problemCount - a.problemCount;
+                });
+                
+                // 分配排名和晋级
+                this.results = [];
+                this.qualifiedParticipants = [];
+                
+                const qualifyCount = Math.max(1, Math.floor(participantsWithScores.length * this.qualificationRate));
+                
+                participantsWithScores.forEach((item, index) => {
+                    const rank = index + 1;
+                    const qualified = rank <= qualifyCount;
+                    
+                    item.student.currentCompetition.rank = rank;
+                    item.student.currentCompetition.qualified = qualified;
+                    
+                    // 记录比赛历史
+                    item.student.competitionHistory.push({
+                        competition: this.name,
+                        week: Game.currentWeek,
+                        score: item.score,
+                        rank: rank,
+                        qualified: qualified,
+                        problemsSolved: item.problemCount
+                    });
+                    
+                    // 更新晋级状态
+                    item.student.qualifiedForNext = qualified;
+                    
+                    if (qualified) {
+                        this.qualifiedParticipants.push(item.student.id);
+                    }
+                    
+                    this.results.push({
+                        studentId: item.student.id,
+                        name: item.student.name,
+                        score: item.score,
+                        rank: rank,
+                        qualified: qualified,
+                        problemCount: item.problemCount
+                    });
+                });
+                
+                // 发放奖金（只有高级比赛有）
+                if (this.type === 'national' || this.type === 'international') {
+                    const prizeMoney = this.type === 'international' ? 50000 : 20000;
+                    Game.budget += prizeMoney;
+                    addLog(`${this.name} 结束！团队获得 ${formatMoney(prizeMoney)} 奖金！`);
+                } else {
+                    addLog(`${this.name} 结束！${this.qualifiedParticipants.length} 名学生晋级下一轮。`);
+                }
+                
+                // 显示结果
+                showCompetitionResult(this);
+            }
+            
+            // 获取实时排名
+            getLiveRanking() {
+                if (!this.participants.length) return [];
+                
+                const liveResults = this.participants.map(student => ({
+                    studentId: student.id,
+                    name: student.name,
+                    score: student.currentCompetition ? student.currentCompetition.totalScore : 0,
+                    problemsSolved: student.currentCompetition ? 
+                        student.currentCompetition.problems.filter(p => p.solved).length : 0,
+                    problems: student.currentCompetition ? 
+                        student.currentCompetition.problems.map(p => ({
+                            solved: p.solved,
+                            score: p.score
+                        })) : []
+                }));
+                
+                // 排序
+                liveResults.sort((a, b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    return b.problemsSolved - a.problemsSolved;
+                });
+                
+                // 添加排名
+                liveResults.forEach((result, index) => {
+                    result.rank = index + 1;
+                });
+                
+                return liveResults;
+            }
+        }
+
+        // 初始化游戏
+        function initGame() {
+            console.log("正在初始化游戏...");
+            
+            // 初始化省份选择
+            initProvinceGrid();
+            
+            // 初始化比赛系统
+            initCompetitions();
+            
+            // 绑定事件
+            bindEvents();
+            
+            // 添加初始日志
+            addLog('游戏初始化完成，请选择一个省份开始');
+            
+            console.log("游戏初始化完成");
+        }
+
+        // 初始化省份选择网格
+        function initProvinceGrid() {
+            const provinceGrid = document.getElementById('provinceGrid');
+            provinceGrid.innerHTML = '';
+            
+            Game.provinces.forEach(province => {
+                const provinceDiv = document.createElement('div');
+                provinceDiv.className = 'province-option';
+                provinceDiv.dataset.id = province.id;
+                provinceDiv.dataset.name = province.name;
+                
+                let difficultyText = '';
+                let difficultyColor = '';
+                
+                switch(province.difficulty) {
+                    case 'easy':
+                        difficultyText = '简单';
+                        difficultyColor = '#27ae60';
+                        break;
+                    case 'medium':
+                        difficultyText = '中等';
+                        difficultyColor = '#f39c12';
+                        break;
+                    case 'hard':
+                        difficultyText = '困难';
+                        difficultyColor = '#e74c3c';
+                        break;
+                }
+                
+                provinceDiv.innerHTML = `
+                    <div style="font-size: 1.2rem; margin-bottom: 5px;">${province.name}</div>
+                    <div style="font-size: 0.9rem; color: ${difficultyColor}">${difficultyText}</div>
+                    <div style="font-size: 0.8rem; color: #7f8c8d; margin-top: 5px;">
+                        <i class="fas fa-coins"></i> 经费×${province.budgetMultiplier.toFixed(1)}
+                    </div>
+                `;
+                
+                provinceDiv.addEventListener('click', () => {
+                    console.log(`选择了省份: ${province.name}`);
+                    
+                    document.querySelectorAll('.province-option').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    
+                    provinceDiv.classList.add('selected');
+                    
+                    Game.selectedProvince = {
+                        id: province.id,
+                        name: province.name,
+                        difficulty: province.difficulty,
+                        budgetMultiplier: province.budgetMultiplier,
+                        talentMultiplier: province.talentMultiplier
+                    };
+                    
+                    addLog(`选择了执教省份: ${province.name}`);
+                });
+                
+                provinceGrid.appendChild(provinceDiv);
+            });
+            
+            // 默认选择第一个省份
+            if (Game.provinces.length > 0) {
+                setTimeout(() => {
+                    const firstProvince = document.querySelector('.province-option');
+                    if (firstProvince) {
+                        firstProvince.click();
+                    }
+                }, 100);
+            }
+        }
+
+        // 初始化比赛
+        function initCompetitions() {
+            Game.competitions = [];
+            Game.competitionSystem.forEach(config => {
+                Game.competitions.push(new Competition(config));
+            });
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            console.log("绑定事件...");
+            
+            // 开始游戏按钮
+            const startGameBtn = document.getElementById('startGameBtn');
+            if (startGameBtn) {
+                startGameBtn.addEventListener('click', startGame);
+                console.log("开始游戏按钮已绑定");
+            }
+            
+            // 结束本周按钮
+            document.getElementById('endWeekBtn').addEventListener('click', endWeek);
+            
+            // 保存游戏按钮
+            document.getElementById('saveGameBtn').addEventListener('click', saveGame);
+            
+            // 显示日志按钮
+            document.getElementById('showLogBtn').addEventListener('click', toggleLog);
+            
+            // 关闭弹窗按钮
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('.modal').classList.remove('active');
+                });
+            });
+            
+            // 重新开始游戏按钮
+            document.getElementById('restartGameBtn').addEventListener('click', restartGame);
+            
+            // 读取存档按钮
+            document.getElementById('loadGameBtn').addEventListener('click', loadGame);
+            
+            // 比赛模拟按钮
+            document.getElementById('nextMinuteBtn').addEventListener('click', simulateCompetitionMinute);
+            document.getElementById('skipToEndBtn').addEventListener('click', skipCompetitionToEnd);
+            
+            console.log("所有事件已绑定");
+        }
+
+        // 开始游戏
+        function startGame() {
+            console.log("开始游戏按钮被点击");
+            console.log("选择的省份:", Game.selectedProvince);
+            
+            if (!Game.selectedProvince) {
+                showError('请先选择一个执教省份！');
+                return;
+            }
+            
+            const studentCount = parseInt(document.getElementById('studentCount').value);
+            if (studentCount < 3 || studentCount > 10) {
+                showError('学生数量必须在3-10人之间！');
+                return;
+            }
+            
+            Game.initialBudget = parseInt(document.getElementById('initialBudget').value) * 10000;
+            Game.budget = Game.initialBudget;
+            
+            Game.gameDuration = parseInt(document.getElementById('gameDuration').value);
+            Game.totalYears = Game.gameDuration;
+            
+            console.log("正在生成学生...");
+            
+            generateStudents(studentCount);
+            
+            Game.currentWeek = 1;
+            Game.currentYear = 1;
+            
+            document.getElementById('initPhase').classList.remove('active');
+            document.getElementById('mainGamePhase').classList.add('active');
+            Game.currentPhase = 'main';
+            
+            console.log("切换到主游戏界面");
+            
+            updateGameUI();
+            
+            addLog(`游戏开始！执教省份: ${Game.selectedProvince.name}, 学生: ${studentCount}人, 初始经费: ${formatMoney(Game.initialBudget)}`);
+            addLog(`第1周开始，请为学生安排训练计划`);
+            
+            console.log("游戏成功启动");
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        // 生成学生
+        function generateStudents(count) {
+            Game.students = [];
+            
+            const firstNames = ['张', '王', '李', '赵', '刘', '陈', '杨', '黄', '周', '吴', '徐', '孙', '胡', '朱', '高', '林', '何', '郭', '马', '罗'];
+            const lastNames = ['伟', '芳', '娜', '秀英', '敏', '静', '丽', '强', '磊', '军', '洋', '勇', '艳', '杰', '涛', '明', '超', '秀兰', '霞', '平', '刚', '桂英'];
+            
+            for (let i = 1; i <= count; i++) {
+                const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+                const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+                const name = firstName + lastName;
+                
+                const student = new Student(i, name, Game.selectedProvince.name);
+                Game.students.push(student);
+            }
+            
+            Game.selectedStudentId = 1;
+            Game.batchSelectedStudents = Game.students.map(s => s.id);
+            
+            console.log(`生成了${count}名学生`);
+        }
+
+        // 更新游戏UI
+        function updateGameUI() {
+            console.log("正在更新游戏UI...");
+            
+            document.getElementById('currentProvince').textContent = Game.selectedProvince.name;
+            document.getElementById('currentWeek').textContent = Game.currentWeek;
+            document.getElementById('currentYear').textContent = `${2023 + Game.currentYear - 1}-${2023 + Game.currentYear}`;
+            document.getElementById('budgetValue').textContent = formatMoney(Game.budget);
+            
+            updateAverageLevel();
+            updateNextCompetition();
+            updateCurrentPhase();
+            updateStudentList();
+            updateActionGrid();
+            updateStudentDetail();
+            
+            console.log("游戏UI更新完成");
+        }
+
+        // 更新平均等级
+        function updateAverageLevel() {
+            if (Game.students.length === 0) {
+                document.getElementById('avgLevel').textContent = 'E';
+                return;
+            }
+            
+            let totalLevelValue = 0;
+            Game.students.forEach(student => {
+                const avgLevel = student.getAverageLevel();
+                const levelIndex = Game.levels.findIndex(l => l.id === avgLevel);
+                totalLevelValue += levelIndex;
+            });
+            
+            const avgLevelIndex = Math.floor(totalLevelValue / Game.students.length);
+            const avgLevel = Game.levels[avgLevelIndex] || Game.levels[0];
+            document.getElementById('avgLevel').textContent = avgLevel.name;
+            document.getElementById('avgLevel').className = `stat-value level-${avgLevel.id}`;
+        }
+
+        // 更新下周比赛
+        function updateNextCompetition() {
+            const upcomingCompetitions = Game.competitions.filter(comp => 
+                comp.status === 'upcoming' && 
+                ((comp.scheduledWeek >= Game.currentWeek && Game.currentYear === 1) || 
+                 (comp.scheduledWeek < Game.currentWeek && Game.currentYear === 2))
+            );
+            
+            if (upcomingCompetitions.length > 0) {
+                const nextComp = upcomingCompetitions[0];
+                document.getElementById('nextCompetition').textContent = nextComp.name;
+                Game.upcomingCompetition = nextComp;
+            } else {
+                document.getElementById('nextCompetition').textContent = '无';
+                Game.upcomingCompetition = null;
+            }
+        }
+
+        // 更新当前阶段
+        function updateCurrentPhase() {
+            let phase = '赛季初期';
+            
+            if (Game.currentWeek >= 40) {
+                phase = '赛季后期';
+            } else if (Game.currentWeek >= 20) {
+                phase = '赛季中期';
+            } else if (Game.currentWeek >= 10) {
+                phase = '比赛季';
+            }
+            
+            document.getElementById('currentPhase').textContent = phase;
+        }
+
+        // 更新学生列表
+        function updateStudentList() {
+            const studentList = document.getElementById('studentList');
+            studentList.innerHTML = '';
+            
+            Game.students.forEach(student => {
+                const studentCard = document.createElement('div');
+                studentCard.className = `student-card ${student.id === Game.selectedStudentId ? 'selected' : ''}`;
+                studentCard.dataset.id = student.id;
+                
+                const avgLevel = student.getAverageLevel();
+                const levelClass = `level-${avgLevel}`;
+                
+                const qualifiedBadge = student.qualifiedForNext ? '<span style="color: #2ecc71; font-size: 0.8rem;">✓ 已晋级</span>' : '';
+                
+                studentCard.innerHTML = `
+                    <div class="student-name">${student.name}</div>
+                    <div class="student-level ${levelClass}">平均等级: ${student.getLevelName('dp')}</div>
+                    <div style="font-size: 0.8rem; color: #dfe6e9; margin-top: 5px;">
+                        疲劳: ${student.fatigue}% | 士气: ${student.morale}%
+                    </div>
+                    ${qualifiedBadge}
+                `;
+                
+                studentCard.addEventListener('click', () => {
+                    document.querySelectorAll('.student-card').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    studentCard.classList.add('selected');
+                    
+                    Game.selectedStudentId = student.id;
+                    
+                    updateStudentDetail();
+                });
+                
+                studentList.appendChild(studentCard);
+            });
+        }
+
+        // 更新行动网格
+        function updateActionGrid() {
+            const actionGrid = document.getElementById('actionGrid');
+            actionGrid.innerHTML = '';
+            
+            const actions = [
+                {id: 'train', icon: 'fas fa-code', title: '题目训练', desc: '为学生分配题目进行算法训练', color: '#3498db'},
+                {id: 'training', icon: 'fas fa-campground', title: '集训营', desc: '参加集训营快速提升能力', color: '#2ecc71'},
+                {id: 'competition', icon: 'fas fa-trophy', title: '查看比赛', desc: '查看比赛详情和进度', color: '#f39c12'},
+                {id: 'rest', icon: 'fas fa-bed', title: '休息', desc: '让学生休息以恢复士气和降低疲劳', color: '#9b59b6'},
+                {id: 'simulate', icon: 'fas fa-chart-bar', title: '模拟赛', desc: '组织模拟比赛积累经验', color: '#e74c3c'},
+                {id: 'analyze', icon: 'fas fa-chart-pie', title: '数据分析', desc: '分析学生表现并调整计划', color: '#1abc9c'}
+            ];
+            
+            actions.forEach(action => {
+                const actionCard = document.createElement('div');
+                actionCard.className = 'action-card';
+                actionCard.dataset.action = action.id;
+                
+                actionCard.innerHTML = `
+                    <div class="action-icon" style="color: ${action.color}">
+                        <i class="${action.icon}"></i>
+                    </div>
+                    <div class="action-title">${action.title}</div>
+                    <div class="action-desc">${action.desc}</div>
+                `;
+                
+                actionCard.addEventListener('click', () => {
+                    handleAction(action.id);
+                });
+                
+                actionGrid.appendChild(actionCard);
+            });
+        }
+
+        // 处理行动
+        function handleAction(actionId) {
+            switch(actionId) {
+                case 'train':
+                    openProblemModal();
+                    break;
+                case 'training':
+                    openTrainingModal();
+                    break;
+                case 'competition':
+                    showCompetitionDetails();
+                    break;
+                case 'rest':
+                    handleRest();
+                    break;
+                case 'simulate':
+                    handleSimulate();
+                    break;
+                case 'analyze':
+                    handleAnalyze();
+                    break;
+            }
+        }
+
+        // 更新学生详情
+        function updateStudentDetail() {
+            const studentDetailSection = document.getElementById('studentDetailSection');
+            const student = Game.students.find(s => s.id === Game.selectedStudentId);
+            
+            if (!student) {
+                studentDetailSection.innerHTML = '<p>请选择一名学生查看详情</p>';
+                return;
+            }
+            
+            let skillsHTML = '';
+            Game.skillTypes.forEach(skill => {
+                const skillData = student.skills[skill.id];
+                const level = student.getLevel(skill.id);
+                const progress = student.getSkillProgress(skill.id);
+                const levelName = student.getLevelName(skill.id);
+                
+                skillsHTML += `
+                    <div class="skill-card">
+                        <div class="skill-header">
+                            <div class="skill-name">${skill.name}</div>
+                            <div class="skill-level level-${level}">${levelName}</div>
+                        </div>
+                        <div class="skill-progress">
+                            <div class="skill-progress-bar" style="width: ${progress}%;"></div>
+                        </div>
+                        <div class="skill-exp">经验: ${skillData.exp}</div>
+                    </div>
+                `;
+            });
+            
+            // 比赛历史
+            let competitionHTML = '';
+            if (student.competitionHistory.length > 0) {
+                competitionHTML = `
+                    <div style="margin-top: 25px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 15px;">比赛历史</h4>
+                        <div style="background: #f8f9fa; border-radius: 8px; padding: 15px;">
+                            ${student.competitionHistory.map(comp => `
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0;">
+                                    <div>
+                                        <strong>${comp.competition}</strong><br>
+                                        <small style="color: #7f8c8d;">第 ${comp.week} 周</small>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div>排名: <strong>#${comp.rank}</strong></div>
+                                        <div>分数: <strong>${comp.score}</strong></div>
+                                        <div style="color: ${comp.qualified ? '#27ae60' : '#e74c3c'}">
+                                            ${comp.qualified ? '✓ 晋级' : '✗ 未晋级'}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            studentDetailSection.innerHTML = `
+                <div class="student-detail">
+                    <div class="student-header">
+                        <div class="student-info">
+                            <div class="student-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="student-details">
+                                <h3>${student.name}</h3>
+                                <p style="color: #7f8c8d;">
+                                    <i class="fas fa-map-marker-alt"></i> ${student.province} | 
+                                    <span class="level-${student.getAverageLevel()}">平均等级: ${student.getLevelName('dp')}</span>
+                                </p>
+                                <div style="display: flex; gap: 20px; margin-top: 10px;">
+                                    <div>
+                                        <div style="color: #7f8c8d; font-size: 0.9rem;">疲劳度</div>
+                                        <div style="color: ${student.fatigue > 70 ? '#e74c3c' : student.fatigue > 40 ? '#f39c12' : '#2ecc71'}; font-weight: bold;">${student.fatigue}%</div>
+                                    </div>
+                                    <div>
+                                        <div style="color: #7f8c8d; font-size: 0.9rem;">士气</div>
+                                        <div style="color: ${student.morale > 70 ? '#2ecc71' : student.morale > 40 ? '#f39c12' : '#e74c3c'}; font-weight: bold;">${student.morale}%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 25px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 15px;">技能详情</h4>
+                        <div class="skill-grid">
+                            ${skillsHTML}
+                        </div>
+                    </div>
+                    
+                    ${competitionHTML}
+                </div>
+            `;
+        }
+
+        // 打开题目选择弹窗（批量训练）
+        function openProblemModal() {
+            // 生成批量训练学生选择
+            const batchStudentSelect = document.getElementById('batchStudentSelect');
+            batchStudentSelect.innerHTML = '';
+            
+            Game.students.forEach(student => {
+                const isChecked = Game.batchSelectedStudents.includes(student.id);
+                const checkbox = document.createElement('div');
+                checkbox.className = 'student-checkbox';
+                checkbox.innerHTML = `
+                    <input type="checkbox" id="batch-student-${student.id}" value="${student.id}" ${isChecked ? 'checked' : ''}>
+                    <label for="batch-student-${student.id}">${student.name}</label>
+                `;
+                batchStudentSelect.appendChild(checkbox);
+            });
+            
+            // 绑定选择事件
+            batchStudentSelect.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const studentId = parseInt(this.value);
+                    if (this.checked) {
+                        if (!Game.batchSelectedStudents.includes(studentId)) {
+                            Game.batchSelectedStudents.push(studentId);
+                        }
+                    } else {
+                        const index = Game.batchSelectedStudents.indexOf(studentId);
+                        if (index > -1) {
+                            Game.batchSelectedStudents.splice(index, 1);
+                        }
+                    }
+                    
+                    document.getElementById('assignBatchProblemBtn').disabled = 
+                        Game.batchSelectedStudents.length === 0 || !Game.selectedProblem;
+                });
+            });
+            
+            // 全选/取消全选按钮
+            document.getElementById('selectAllBtn').onclick = () => {
+                Game.batchSelectedStudents = Game.students.map(s => s.id);
+                batchStudentSelect.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+                document.getElementById('assignBatchProblemBtn').disabled = !Game.selectedProblem;
+            };
+            
+            document.getElementById('deselectAllBtn').onclick = () => {
+                Game.batchSelectedStudents = [];
+                batchStudentSelect.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                document.getElementById('assignBatchProblemBtn').disabled = true;
+            };
+            
+            // 生成题目列表
+            const problemGrid = document.getElementById('problemGrid');
+            problemGrid.innerHTML = '';
+            
+            const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+            let filteredProblems = Game.problems;
+            
+            if (activeFilter !== 'all') {
+                filteredProblems = Game.problems.filter(problem => 
+                    problem.skills.includes(activeFilter)
+                );
+            }
+            
+            filteredProblems.forEach(problem => {
+                const problemCard = document.createElement('div');
+                problemCard.className = 'problem-card';
+                problemCard.dataset.id = problem.id;
+                
+                let difficultyClass = '';
+                switch(problem.difficulty) {
+                    case 'easy': difficultyClass = 'difficulty-easy'; break;
+                    case 'medium': difficultyClass = 'difficulty-medium'; break;
+                    case 'hard': difficultyClass = 'difficulty-hard'; break;
+                }
+                
+                let difficultyText = problem.difficulty === 'easy' ? '简单' : problem.difficulty === 'medium' ? '中等' : '困难';
+                
+                let skillsHTML = '';
+                problem.skills.forEach(skillId => {
+                    const skill = Game.skillTypes.find(s => s.id === skillId);
+                    if (skill) {
+                        skillsHTML += `<span class="skill-tag">${skill.name}</span>`;
+                    }
+                });
+                
+                problemCard.innerHTML = `
+                    <div class="problem-header">
+                        <div class="problem-title">${problem.name}</div>
+                        <div class="problem-difficulty ${difficultyClass}">${difficultyText}</div>
+                    </div>
+                    <div style="color: #7f8c8d; font-size: 0.9rem; margin-top: 10px;">
+                        经验: <span style="color: #2ecc71; font-weight: bold;">${problem.exp}</span>
+                    </div>
+                    <div class="problem-skills">
+                        ${skillsHTML}
+                    </div>
+                `;
+                
+                problemCard.addEventListener('click', () => {
+                    document.querySelectorAll('.problem-card').forEach(el => {
+                        el.style.borderColor = '#e0e0e0';
+                    });
+                    problemCard.style.borderColor = '#3498db';
+                    
+                    Game.selectedProblem = problem;
+                    
+                    document.getElementById('assignBatchProblemBtn').disabled = 
+                        Game.batchSelectedStudents.length === 0;
+                });
+                
+                problemGrid.appendChild(problemCard);
+            });
+            
+            // 显示弹窗
+            document.getElementById('problemModal').classList.add('active');
+            
+            // 重置选择
+            Game.selectedProblem = null;
+            document.getElementById('assignBatchProblemBtn').disabled = true;
+            
+            // 绑定分配按钮事件
+            document.getElementById('assignBatchProblemBtn').onclick = assignBatchProblem;
+            
+            // 绑定过滤器事件
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    openProblemModal();
+                });
+            });
+        }
+
+        // 分配批量题目
+        function assignBatchProblem() {
+            if (!Game.selectedProblem || Game.batchSelectedStudents.length === 0) {
+                alert('请选择一个题目和至少一名学生！');
+                return;
+            }
+            
+            const problem = Game.selectedProblem;
+            
+            // 检查经费
+            if (problem.cost * Game.batchSelectedStudents.length > Game.budget) {
+                alert(`经费不足！需要 ${formatMoney(problem.cost * Game.batchSelectedStudents.length)}，只有 ${formatMoney(Game.budget)}`);
+                return;
+            }
+            
+            // 扣除经费
+            if (problem.cost > 0) {
+                Game.budget -= problem.cost * Game.batchSelectedStudents.length;
+            }
+            
+            let totalExp = 0;
+            const studentNames = [];
+            
+            Game.batchSelectedStudents.forEach(studentId => {
+                const student = Game.students.find(s => s.id === studentId);
+                if (student) {
+                    problem.skills.forEach(skillId => {
+                        const exp = student.addSkillExp(skillId, problem.exp);
+                        totalExp += exp;
+                    });
+                    
+                    student.trainingHistory.push({
+                        week: Game.currentWeek,
+                        year: Game.currentYear,
+                        type: 'problem',
+                        name: problem.name,
+                        exp: problem.exp
+                    });
+                    
+                    studentNames.push(student.name);
+                }
+            });
+            
+            addLog(`批量训练: ${studentNames.join('、')} 完成了题目【${problem.name}】，共获得 ${totalExp} 经验，花费 ${formatMoney(problem.cost * Game.batchSelectedStudents.length)}`);
+            
+            updateGameUI();
+            document.getElementById('problemModal').classList.remove('active');
+        }
+
+        // 显示比赛详情
+        function showCompetitionDetails() {
+            const competitionDetail = document.getElementById('competitionDetail');
+            
+            let html = '<h3 style="color: #2c3e50; margin-bottom: 20px;">比赛日程</h3>';
+            
+            Game.competitions.forEach(comp => {
+                const isCurrent = comp.status === 'ongoing';
+                const canStart = comp.status === 'upcoming' && comp.scheduledWeek <= Game.currentWeek;
+                
+                html += `
+                    <div class="competition-card" style="margin-bottom: 15px; ${isCurrent ? 'border-color: #f39c12;' : ''}">
+                        <div class="competition-header">
+                            <div class="competition-name">${comp.name}</div>
+                            <div class="competition-status status-${comp.status}">
+                                ${comp.status === 'upcoming' ? '未开始' : comp.status === 'ongoing' ? '进行中' : '已结束'}
+                            </div>
+                        </div>
+                        <div class="competition-info">
+                            <div><i class="fas fa-calendar"></i> 第 ${comp.scheduledWeek} 周</div>
+                            <div><i class="fas fa-list-ol"></i> ${comp.problemCount} 题</div>
+                            <div><i class="fas fa-coins"></i> 报名费: ${formatMoney(comp.cost)}</div>
+                        </div>
+                        <p style="color: #7f8c8d; margin-top: 15px;">
+                            ${comp.type === 'preliminary' ? '初赛' : comp.type === 'provincial' ? '省级比赛' : comp.type === 'national' ? '全国比赛' : comp.type === 'selection' ? '选拔赛' : comp.type === 'team' ? '国家队选拔' : '国际比赛'}
+                        </p>
+                        ${comp.results ? `
+                            <div style="margin-top: 15px;">
+                                <div style="color: #2c3e50; font-weight: bold; margin-bottom: 5px;">结果:</div>
+                                <div>晋级: ${comp.qualifiedParticipants.length} 人</div>
+                                <div>最高分: ${Math.max(...comp.results.map(r => r.score))}</div>
+                            </div>
+                        ` : ''}
+                        ${isCurrent ? `
+                            <div style="margin-top: 15px;">
+                                <button class="btn btn-warning view-competition-btn" data-id="${comp.id}" style="padding: 8px 15px; font-size: 0.9rem;">
+                                    <i class="fas fa-eye"></i> 查看实时比赛
+                                </button>
+                            </div>
+                        ` : canStart ? `
+                            <div style="margin-top: 15px;">
+                                <button class="btn btn-primary start-competition-btn" data-id="${comp.id}" style="padding: 8px 15px; font-size: 0.9rem;">
+                                    <i class="fas fa-play"></i> 开始比赛
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            competitionDetail.innerHTML = html;
+            
+            // 绑定开始比赛按钮
+            document.querySelectorAll('.start-competition-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const compId = this.dataset.id;
+                    startCompetition(compId);
+                });
+            });
+            
+            // 绑定查看比赛按钮
+            document.querySelectorAll('.view-competition-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const compId = this.dataset.id;
+                    showLiveCompetition(compId);
+                });
+            });
+            
+            document.getElementById('competitionDetailModal').classList.add('active');
+        }
+
+        // 开始比赛
+        function startCompetition(compId) {
+            const competition = Game.competitions.find(c => c.id === compId);
+            if (!competition) return;
+            
+            // 获取有资格参赛的学生
+            const eligibleStudents = Game.students.filter(student => 
+                student.qualifiedForNext || student.competitionHistory.length === 0
+            );
+            
+            if (eligibleStudents.length === 0) {
+                alert('没有学生有资格参加这场比赛！');
+                return;
+            }
+            
+            competition.start(eligibleStudents);
+            Game.activeCompetition = competition;
+            
+            // 关闭详情弹窗
+            document.getElementById('competitionDetailModal').classList.remove('active');
+            
+            // 显示实时比赛界面
+            showLiveCompetition(compId);
+            
+            updateGameUI();
+        }
+
+        // 显示实时比赛
+        function showLiveCompetition(compId) {
+            const competition = Game.competitions.find(c => c.id === compId);
+            if (!competition) return;
+            
+            Game.activeCompetition = competition;
+            
+            // 更新比赛名称
+            document.getElementById('liveCompetitionName').textContent = competition.name;
+            
+            // 生成比赛详情
+            const competitionLive = document.getElementById('competitionLive');
+            
+            // 显示题目
+            let problemsHTML = `
+                <h4 style="color: #2c3e50; margin-bottom: 15px;">题目 (共${competition.problemCount}题)</h4>
+                <div class="competition-problems">
+            `;
+            
+            competition.problems.forEach(problem => {
+                let difficultyText = problem.difficulty === 'easy' ? '简单' : problem.difficulty === 'medium' ? '中等' : '困难';
+                problemsHTML += `
+                    <div class="problem-box">
+                        <div class="problem-id">${String.fromCharCode(64 + problem.id)}</div>
+                        <div style="color: #7f8c8d; font-size: 0.9rem; margin: 5px 0;">${difficultyText}</div>
+                        <div class="problem-score">${problem.baseScore} 分</div>
+                    </div>
+                `;
+            });
+            
+            problemsHTML += '</div>';
+            
+            // 显示实时排名
+            const liveRanking = competition.getLiveRanking();
+            
+            let rankingHTML = `
+                <h4 style="color: #2c3e50; margin-top: 25px; margin-bottom: 15px;">实时排名</h4>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <table class="ranking-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>学生</th>
+                                <th>分数</th>
+                                <th>解题情况</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            liveRanking.forEach(result => {
+                const student = Game.students.find(s => s.id === result.studentId);
+                const problemStatus = result.problems.map((p, idx) => 
+                    p.solved ? `<span style="color: #27ae60; font-weight: bold;">${String.fromCharCode(65 + idx)}</span>` : 
+                               `<span style="color: #7f8c8d;">${String.fromCharCode(65 + idx)}</span>`
+                ).join(' ');
+                
+                rankingHTML += `
+                    <tr class="rank-${result.rank <= 3 ? result.rank : ''}">
+                        <td><strong>#${result.rank}</strong></td>
+                        <td>${result.name}</td>
+                        <td class="score-cell">${result.score}</td>
+                        <td>${problemStatus}</td>
+                        <td>
+                            ${result.problemsSolved}/${competition.problemCount}
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            rankingHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            competitionLive.innerHTML = problemsHTML + rankingHTML;
+            
+            // 更新进度条
+            updateCompetitionProgress();
+            
+            // 显示弹窗
+            document.getElementById('competitionLiveModal').classList.add('active');
+        }
+
+        // 更新比赛进度
+        function updateCompetitionProgress() {
+            if (!Game.activeCompetition) return;
+            
+            const progress = (Game.activeCompetition.currentWeek / Game.activeCompetition.duration) * 100;
+            document.getElementById('competitionProgress').style.width = `${progress}%`;
+            
+            const elapsed = Game.activeCompetition.currentWeek;
+            const remaining = Game.activeCompetition.duration - elapsed;
+            
+            document.getElementById('elapsedTime').textContent = elapsed;
+            document.getElementById('remainingTime').textContent = remaining;
+        }
+
+        // 模拟比赛时间
+        function simulateCompetitionMinute() {
+            if (!Game.activeCompetition) return;
+            
+            // 模拟10分钟比赛时间
+            Game.activeCompetition.simulateProgress();
+            
+            // 更新显示
+            showLiveCompetition(Game.activeCompetition.id);
+            
+            // 如果比赛结束，关闭实时窗口
+            if (Game.activeCompetition.status === 'finished') {
+                setTimeout(() => {
+                    document.getElementById('competitionLiveModal').classList.remove('active');
+                }, 1000);
+            }
+        }
+
+        // 跳到比赛结束
+        function skipCompetitionToEnd() {
+            if (!Game.activeCompetition) return;
+            
+            // 直接模拟到比赛结束
+            while (Game.activeCompetition.status === 'ongoing') {
+                Game.activeCompetition.simulateProgress();
+            }
+            
+            // 关闭实时窗口
+            document.getElementById('competitionLiveModal').classList.remove('active');
+            
+            updateGameUI();
+        }
+
+        // 显示比赛结果
+        function showCompetitionResult(competition) {
+            const competitionResult = document.getElementById('competitionResult');
+            
+            let resultsHTML = `
+                <h3 style="color: #2c3e50; text-align: center; margin-bottom: 20px;">${competition.name} 结果</h3>
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <div style="font-size: 1.2rem; color: #2c3e50;">
+                        晋级下一轮: <span style="color: #27ae60; font-weight: bold;">${competition.qualifiedParticipants.length}</span> 人
+                    </div>
+                </div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table class="ranking-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>学生</th>
+                                <th>分数</th>
+                                <th>解题数</th>
+                                <th>晋级情况</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            competition.results.forEach(result => {
+                const qualificationClass = result.qualified ? 'qualified-status' : 'not-qualified-status';
+                const qualificationText = result.qualified ? '已晋级' : '未晋级';
+                
+                resultsHTML += `
+                    <tr class="rank-${result.rank <= 3 ? result.rank : ''}">
+                        <td><strong>#${result.rank}</strong></td>
+                        <td>${result.name}</td>
+                        <td class="score-cell">${result.score}</td>
+                        <td>${result.problemCount}/${competition.problemCount}</td>
+                        <td>
+                            <span class="qualification-status ${qualificationClass}">
+                                ${result.qualified ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'} 
+                                ${qualificationText}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            resultsHTML += `
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <p style="color: #2c3e50; margin-bottom: 10px;">
+                        <i class="fas fa-info-circle"></i> 下一场比赛: 
+                        <strong>${competition.nextCompetition ? Game.competitions.find(c => c.id === competition.nextCompetition)?.name : '无 (最终比赛)'}</strong>
+                    </p>
+                    <p style="color: #7f8c8d; font-size: 0.9rem;">
+                        晋级的学生将自动参加下一场比赛。
+                    </p>
+                </div>
+            `;
+            
+            competitionResult.innerHTML = resultsHTML;
+            
+            // 显示弹窗
+            document.getElementById('resultModal').classList.add('active');
+        }
+
+        // 处理休息
+        function handleRest() {
+            const student = Game.students.find(s => s.id === Game.selectedStudentId);
+            if (!student) return;
+            
+            student.rest();
+            
+            addLog(`${student.name} 休息了一周，疲劳度降低30%，士气提高20%`);
+            
+            updateStudentDetail();
+        }
+
+        // 处理模拟赛
+        function handleSimulate() {
+            // 创建模拟比赛
+            const mockCompetition = new Competition({
+                id: 'simulation',
+                name: '模拟赛',
+                type: 'provincial',
+                week: Game.currentWeek,
+                duration: 2,
+                problems: 4,
+                problemBaseScore: 100,
+                qualificationRate: 1,
+                nextCompetition: null,
+                cost: 2000
+            });
+            
+            // 选择所有学生参加
+            const participants = Game.students.filter(s => s.fatigue < 80);
+            
+            if (participants.length === 0) {
+                alert('所有学生都太疲劳了，无法参加模拟赛！');
+                return;
+            }
+            
+            if (mockCompetition.cost * participants.length > Game.budget) {
+                alert(`经费不足！需要 ${formatMoney(mockCompetition.cost * participants.length)}，只有 ${formatMoney(Game.budget)}`);
+                return;
+            }
+            
+            Game.budget -= mockCompetition.cost * participants.length;
+            
+            // 快速模拟比赛
+            mockCompetition.start(participants);
+            while (mockCompetition.status === 'ongoing') {
+                mockCompetition.simulateProgress();
+            }
+            
+            addLog(`模拟赛完成！花费：${formatMoney(mockCompetition.cost * participants.length)}`);
+            
+            updateGameUI();
+        }
+
+        // 处理数据分析
+        function handleAnalyze() {
+            const student = Game.students.find(s => s.id === Game.selectedStudentId);
+            if (!student) return;
+            
+            const cost = 1000;
+            if (cost > Game.budget) {
+                alert(`经费不足！需要 ${formatMoney(cost)}，只有 ${formatMoney(Game.budget)}`);
+                return;
+            }
+            
+            Game.budget -= cost;
+            
+            let strongestSkill = null;
+            let weakestSkill = null;
+            let maxExp = -1;
+            let minExp = Infinity;
+            
+            Object.values(student.skills).forEach(skill => {
+                if (skill.exp > maxExp) {
+                    maxExp = skill.exp;
+                    strongestSkill = skill;
+                }
+                if (skill.exp < minExp) {
+                    minExp = skill.exp;
+                    weakestSkill = skill;
+                }
+            });
+            
+            addLog(`数据分析完成！${student.name} 最强的技能是 ${strongestSkill.name}(${student.getLevelName(strongestSkill.id)})，最弱的是 ${weakestSkill.name}(${student.getLevelName(weakestSkill.id)})，花费 ${formatMoney(cost)}`);
+            
+            updateGameUI();
+        }
+
+        // 结束本周
+        function endWeek() {
+            // 增加周数
+            Game.currentWeek++;
+            
+            // 检查是否进入下一年
+            if (Game.currentWeek > 52) {
+                Game.currentWeek = 1;
+                Game.currentYear++;
+                
+                // 检查游戏是否结束
+                if (Game.currentYear > Game.totalYears) {
+                    endGame();
+                    return;
+                }
+                
+                addLog(`进入第 ${Game.currentYear} 竞赛年！`);
+            }
+            
+            // 处理进行中的比赛
+            processActiveCompetitions();
+            
+            // 处理自动开始的比赛
+            processScheduledCompetitions();
+            
+            // 处理学生状态恢复
+            processStudentRecovery();
+            
+            addLog(`第 ${Game.currentWeek} 周开始`);
+            
+            updateGameUI();
+        }
+
+        // 处理进行中的比赛
+        function processActiveCompetitions() {
+            Game.competitions.forEach(comp => {
+                if (comp.status === 'ongoing') {
+                    comp.simulateProgress();
+                }
+            });
+        }
+
+        // 处理预定比赛
+        function processScheduledCompetitions() {
+            Game.competitions.forEach(comp => {
+                if (comp.status === 'upcoming' && comp.scheduledWeek <= Game.currentWeek) {
+                    // 检查是否有资格参赛的学生
+                    const eligibleStudents = Game.students.filter(student => 
+                        student.qualifiedForNext || student.competitionHistory.length === 0
+                    );
+                    
+                    if (eligibleStudents.length > 0) {
+                        // 自动开始比赛
+                        comp.start(eligibleStudents);
+                        addLog(`${comp.name} 自动开始，${eligibleStudents.length} 名学生参加`);
+                    }
+                }
+            });
+        }
+
+        // 处理学生状态恢复
+        function processStudentRecovery() {
+            Game.students.forEach(student => {
+                student.fatigue = Math.max(0, student.fatigue - 5);
+                student.morale = Math.min(100, student.morale + 5);
+            });
+        }
+
+        // 结束游戏
+        function endGame() {
+            Game.currentPhase = 'over';
+            
+            calculateFinalResults();
+            
+            document.getElementById('gameOverModal').classList.add('active');
+        }
+
+        // 计算最终成绩
+        function calculateFinalResults() {
+            // 计算团队平均等级
+            let totalLevelValue = 0;
+            Game.students.forEach(student => {
+                const avgLevel = student.getAverageLevel();
+                const levelIndex = Game.levels.findIndex(l => l.id === avgLevel);
+                totalLevelValue += levelIndex;
+            });
+            
+            const avgLevelIndex = Math.floor(totalLevelValue / Game.students.length);
+            const avgLevel = Game.levels[avgLevelIndex] || Game.levels[0];
+            
+            // 计算最佳学生
+            let bestStudent = null;
+            let bestExp = -1;
+            
+            Game.students.forEach(student => {
+                const totalExp = Object.values(student.skills).reduce((sum, skill) => sum + skill.exp, 0);
+                if (totalExp > bestExp) {
+                    bestExp = totalExp;
+                    bestStudent = student;
+                }
+            });
+            
+            // 计算比赛成绩
+            let competitionScore = 0;
+            let highestAchievement = '无';
+            
+            Game.competitions.forEach(comp => {
+                if (comp.results) {
+                    comp.results.forEach(result => {
+                        if (result.qualified) {
+                            competitionScore += 100 - result.rank;
+                            
+                            // 记录最高成就
+                            if (comp.type === 'international' && highestAchievement !== 'IOI') {
+                                highestAchievement = 'IOI参赛资格';
+                            } else if (comp.type === 'national' && highestAchievement !== 'IOI参赛资格') {
+                                highestAchievement = 'NOI参赛资格';
+                            } else if (comp.type === 'selection' && highestAchievement !== 'NOI参赛资格') {
+                                highestAchievement = '省队选拔';
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // 计算最终评级
+            let finalGrade = 'C';
+            const totalScore = avgLevelIndex * 10 + competitionScore + Math.floor(Game.budget / 10000);
+            
+            if (totalScore >= 100) finalGrade = 'A+';
+            else if (totalScore >= 80) finalGrade = 'A';
+            else if (totalScore >= 60) finalGrade = 'B';
+            else if (totalScore >= 40) finalGrade = 'C';
+            else if (totalScore >= 20) finalGrade = 'D';
+            else finalGrade = 'F';
+            
+            // 更新游戏结果标题
+            let resultTitle = '';
+            let resultColor = '';
+            
+            switch(finalGrade) {
+                case 'A+':
+                    resultTitle = '传奇教练！';
+                    resultColor = '#f1c40f';
+                    break;
+                case 'A':
+                    resultTitle = '优秀教练！';
+                    resultColor = '#2ecc71';
+                    break;
+                case 'B':
+                    resultTitle = '合格教练';
+                    resultColor = '#3498db';
+                    break;
+                case 'C':
+                    resultTitle = '需要改进';
+                    resultColor = '#f39c12';
+                    break;
+                case 'D':
+                case 'F':
+                    resultTitle = '还需努力';
+                    resultColor = '#e74c3c';
+                    break;
+            }
+            
+            document.getElementById('gameResultTitle').textContent = resultTitle;
+            document.getElementById('gameResultTitle').style.color = resultColor;
+            
+            // 更新游戏统计
+            document.getElementById('gameResultStats').innerHTML = `
+                <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 20px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #2c3e50;">${Game.totalYears}</div>
+                        <div style="color: #7f8c8d;">竞赛年</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #2c3e50;">${Game.students.length}</div>
+                        <div style="color: #7f8c8d;">学生数</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #2c3e50;">${avgLevel.name}</div>
+                        <div style="color: #7f8c8d;">平均等级</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #2c3e50;">${formatMoney(Game.budget)}</div>
+                        <div style="color: #7f8c8d;">剩余经费</div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 1.2rem; color: #7f8c8d;">最高成就: <span style="color: ${resultColor}; font-weight: bold; font-size: 1.5rem;">${highestAchievement}</span></div>
+                    <div style="font-size: 1.2rem; color: #7f8c8d; margin-top: 10px;">最终评级: <span style="color: ${resultColor}; font-weight: bold; font-size: 1.5rem;">${finalGrade}</span></div>
+                </div>
+            `;
+            
+            // 显示最佳学生
+            if (bestStudent) {
+                const finalResults = document.getElementById('finalResults');
+                finalResults.innerHTML = `
+                    <div class="result-card">
+                        <div style="font-size: 1.5rem; color: #f1c40f; margin-bottom: 10px;">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <div class="result-name">最佳学生</div>
+                        <div style="font-size: 1.8rem; color: #2c3e50; font-weight: bold;">${bestStudent.name}</div>
+                        <div style="color: #7f8c8d; margin-top: 10px;">平均等级: <span class="level-${bestStudent.getAverageLevel()}">${bestStudent.getLevelName('dp')}</span></div>
+                    </div>
+                `;
+            }
+        }
+
+        // 重新开始游戏
+        function restartGame() {
+            Game.currentPhase = 'init';
+            Game.currentWeek = 1;
+            Game.currentYear = 1;
+            Game.selectedProvince = null;
+            Game.budget = 500000;
+            Game.students = [];
+            Game.selectedStudentId = null;
+            Game.logs = [];
+            Game.activeCompetition = null;
+            
+            initCompetitions();
+            initProvinceGrid();
+            
+            document.getElementById('mainGamePhase').classList.remove('active');
+            document.getElementById('initPhase').classList.add('active');
+            document.getElementById('gameOverModal').classList.remove('active');
+            
+            addLog('游戏重置，请重新开始');
+        }
+
+        // 保存游戏
+        function saveGame() {
+            const saveData = {
+                currentPhase: Game.currentPhase,
+                currentWeek: Game.currentWeek,
+                currentYear: Game.currentYear,
+                totalYears: Game.totalYears,
+                selectedProvince: Game.selectedProvince,
+                budget: Game.budget,
+                initialBudget: Game.initialBudget,
+                students: Game.students,
+                competitions: Game.competitions,
+                logs: Game.logs.slice(-20)
+            };
+            
+            try {
+                localStorage.setItem('oiCoachSimulatorSave', JSON.stringify(saveData));
+                addLog('游戏已保存');
+                alert('游戏保存成功！');
+            } catch (e) {
+                alert('保存失败: ' + e.message);
+            }
+        }
+
+        // 读取存档
+        function loadGame() {
+            try {
+                const saveData = localStorage.getItem('oiCoachSimulatorSave');
+                if (!saveData) {
+                    alert('没有找到存档文件！');
+                    return;
+                }
+                
+                const data = JSON.parse(saveData);
+                
+                Game.currentPhase = data.currentPhase;
+                Game.currentWeek = data.currentWeek;
+                Game.currentYear = data.currentYear;
+                Game.totalYears = data.totalYears;
+                Game.selectedProvince = data.selectedProvince;
+                Game.budget = data.budget;
+                Game.initialBudget = data.initialBudget;
+                Game.students = data.students;
+                Game.competitions = data.competitions;
+                Game.logs = data.logs;
+                
+                Game.students.forEach(studentData => {
+                    const student = new Student(studentData.id, studentData.name, studentData.province);
+                    student.fatigue = studentData.fatigue;
+                    student.morale = studentData.morale;
+                    student.trainingHistory = studentData.trainingHistory;
+                    student.skills = studentData.skills;
+                    student.competitionHistory = studentData.competitionHistory || [];
+                    student.qualifiedForNext = studentData.qualifiedForNext || false;
+                    Game.students[studentData.id - 1] = student;
+                });
+                
+                if (Game.students.length > 0) {
+                    Game.selectedStudentId = 1;
+                    Game.batchSelectedStudents = Game.students.map(s => s.id);
+                }
+                
+                document.getElementById('initPhase').classList.remove('active');
+                document.getElementById('mainGamePhase').classList.add('active');
+                
+                updateGameUI();
+                
+                addLog('游戏存档已加载');
+                
+            } catch (e) {
+                alert('读取失败: ' + e.message);
+            }
+        }
+
+        // 添加日志
+        function addLog(message) {
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            
+            Game.logs.push({
+                time: timeStr,
+                message: message
+            });
+            
+            if (Game.logs.length > 50) {
+                Game.logs.shift();
+            }
+            
+            updateLogDisplay();
+        }
+
+        // 更新日志显示
+        function updateLogDisplay() {
+            const logContent = document.getElementById('logContent');
+            logContent.innerHTML = '';
+            
+            Game.logs.forEach(log => {
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+                logItem.innerHTML = `
+                    <span class="log-time">[${log.time}]</span>
+                    <span class="log-content">${log.message}</span>
+                `;
+                logContent.appendChild(logItem);
+            });
+            
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        // 切换日志显示
+        function toggleLog() {
+            const logContainer = document.getElementById('gameLog');
+            if (logContainer.style.display === 'none') {
+                logContainer.style.display = 'block';
+                updateLogDisplay();
+            } else {
+                logContainer.style.display = 'none';
+            }
+        }
+
+        // 格式化金额
+        function formatMoney(amount) {
+            if (amount >= 10000) {
+                return (amount / 10000).toFixed(1) + '万';
+            }
+            return amount.toString();
+        }
+
+        // 页面加载完成后初始化游戏
+        window.onload = function() {
+            console.log("页面加载完成，正在初始化游戏...");
+            initGame();
+        };
+    </script>
+</body>
+</html>
